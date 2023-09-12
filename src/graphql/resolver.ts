@@ -1,5 +1,7 @@
-import { InputUserInterface, OutputUserInterface } from "../interfaces";
+import { camelizeIf } from "sequelize/lib/utils";
+import { InputUserInterface, UserInterface } from "../interfaces";
 import User from "../models/user";
+import bcrypt = require("bcrypt");
 
 export const resolvers = {
   Query: {
@@ -11,7 +13,7 @@ export const resolvers = {
     register: async (
       parents: any,
       args: { input: InputUserInterface }
-    ): Promise<OutputUserInterface> => {
+    ): Promise<UserInterface> => {
       const { userName, email, password, confirmPassword } = args.input;
 
       if (password !== confirmPassword) {
@@ -25,10 +27,12 @@ export const resolvers = {
           throw new Error("Email already exists");
         }
 
+        const hashedPassed = await bcrypt.hash(password, 12);
+
         const newUser: any = await User.create({
           email,
           userName,
-          password,
+          password: hashedPassed,
         });
         return {
           id: newUser.id,
@@ -44,7 +48,7 @@ export const resolvers = {
     login: async (
       parent: any,
       args: { input: InputUserInterface }
-    ): Promise<OutputUserInterface> => {
+    ): Promise<UserInterface> => {
       const { email, password } = args.input;
 
       try {
@@ -54,10 +58,13 @@ export const resolvers = {
           throw new Error("This user is not registered yet");
         }
 
-        if (password !== userLogin.dataValues.password) {
-          throw new Error("The password donot match");
+        const isValidPassword = await bcrypt.compare(
+          password!.toString(),
+          userLogin?.dataValues?.password
+        );
+        if (!isValidPassword) {
+          throw new Error("Incorrect Email or Password");
         }
-
         return {
           ...userLogin.dataValues,
           message: "Login successfull",

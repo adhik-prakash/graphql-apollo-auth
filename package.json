@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-   "build:watch":"tsc --watch",
-   "start":"nodemon ./dist/server.js"
+    "build:watch": "tsc --watch",
+    "start": "nodemon ./dist/server.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +13,7 @@
   "dependencies": {
     "@apollo/server": "^4.9.3",
     "@sequelize/core": "^7.0.0-alpha.28",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.3.1",
     "pg": "^8.11.3",
     "sequelize": "^6.33.0",
