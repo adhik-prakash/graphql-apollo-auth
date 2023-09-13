@@ -1,14 +1,23 @@
-import { camelizeIf } from "sequelize/lib/utils";
 import { InputUserInterface, UserInterface } from "../interfaces";
 import User from "../models/user";
-import bcrypt = require("bcrypt");
-
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 export const resolvers = {
   Query: {
     users: async () => {
       return await User.findAll();
     },
+
+    user: async (parent: any, args: any) => {
+      const user = await User.findOne({ where: { id: args?.id } });
+      // console.log(user);
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    },
   },
+
   Mutation: {
     register: async (
       parents: any,
@@ -26,7 +35,6 @@ export const resolvers = {
         if (checkEmail) {
           throw new Error("Email already exists");
         }
-
         const hashedPassed = await bcrypt.hash(password, 12);
 
         const newUser: any = await User.create({
@@ -44,7 +52,19 @@ export const resolvers = {
         throw new Error(error.message);
       }
     },
+    deleteUser: async (parent: any, args: any) => {
+      const deleteUser = await User.findOne({ where: { id: args?.id } });
+      //  console.log(deleteUser);
 
+      if (!deleteUser) {
+        throw new Error("User not found");
+      }
+      await deleteUser!.destroy();
+
+      // console.log(deleteUser?.dataValues);
+
+      return deleteUser?.dataValues;
+    },
     login: async (
       parent: any,
       args: { input: InputUserInterface }
@@ -61,13 +81,26 @@ export const resolvers = {
         const isValidPassword = await bcrypt.compare(
           password!.toString(),
           userLogin?.dataValues?.password
+          //decrypt password and then convert to string and compare to the password the user entered.
         );
         if (!isValidPassword) {
-          throw new Error("Incorrect Email or Password");
+          throw new Error(" Password you entered is incorrect");
         }
+        const payload = {
+          email: email,
+          password: password,
+        };
+
+        const token = jwt.sign(
+          { exp: Math.floor(Date.now() / 1000) + 60 * 60, payload },
+          process.env.JWT_SECRET_KEY!
+        );
+
+        // console.log(userLogin);
         return {
           ...userLogin.dataValues,
-          message: "Login successfull",
+          token,
+          message: "Login is done successfull",
         };
       } catch (error: any) {
         throw new Error(error.message);

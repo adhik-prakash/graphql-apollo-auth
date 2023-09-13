@@ -1,17 +1,19 @@
+import { UserInterface } from "./../interfaces/userInterface";
 const typeDefs = `#graphql
 
 type User {
 id:ID
 userName:String
-password:String
 email:String
 createdAt:String
 message:String
+token: String
 
 }
 
 type Query{
-users:[User]
+users:[User],
+user(id: ID!): User
 }
 input RegisterInput{
 userName:String!
@@ -27,7 +29,7 @@ password:String!
 type Mutation {
 register(input:RegisterInput):User
 login(input:LoginInput):User
-
+deleteUser(id:ID!): User
 }
 
 

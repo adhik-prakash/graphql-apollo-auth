@@ -6,7 +6,7 @@ import { typeDefs, resolvers } from "./graphql";
 
 const initApp = async () => {
   await sequelize.authenticate();
-  console.log("Connection has been established successfully");
+  console.log(" Db Connection has been established successfully");
 
   const server = new ApolloServer({
     typeDefs,
