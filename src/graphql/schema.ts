@@ -13,7 +13,8 @@ token: String
 
 type Query{
 users:[User],
-user(id: ID!): User
+user(id: ID!): User,
+getUserProfile:User
 }
 input RegisterInput{
 userName:String!

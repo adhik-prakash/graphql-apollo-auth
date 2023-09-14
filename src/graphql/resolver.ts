@@ -1,7 +1,8 @@
+import { authenticate } from "../Middleware";
 import { InputUserInterface, UserInterface } from "../interfaces";
 import User from "../models/user";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 export const resolvers = {
   Query: {
     users: async () => {
@@ -15,6 +16,21 @@ export const resolvers = {
         throw new Error("User not found");
       }
       return user;
+    },
+    getUserProfile: async (parent: any, args: any, context: any) => {
+      try {
+        if (!context?.token) {
+          throw new Error("token is missing");
+        }
+
+        const tokenData = (await authenticate(context?.token)) as JwtPayload;
+
+        const user = User.findOne({ where: { id: tokenData?.user?.id } });
+
+        return user;
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
     },
   },
 
@@ -89,12 +105,12 @@ export const resolvers = {
         const payload = {
           email: email,
           password: password,
+          id: userLogin?.dataValues?.id,
         };
 
-        const token = jwt.sign(
-          { exp: Math.floor(Date.now() / 1000) + 60 * 60, payload },
-          process.env.JWT_SECRET_KEY!
-        );
+        const token = jwt.sign(payload, process.env.JWT_SECRET_KEY!, {
+          expiresIn: "1d",
+        });
 
         // console.log(userLogin);
         return {

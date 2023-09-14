@@ -15,6 +15,14 @@ const initApp = async () => {
 
   const { url } = await startStandaloneServer(server, {
     listen: { port: 4000 },
+    context: ({ req }: { req: any }) => {
+      const token = req.headers.authorization;
+      if (!token) {
+        return Promise.resolve({});
+      }
+
+      return Promise.resolve({ token });
+    },
   });
 
   console.log(`Server running at port : 4000 and url ${url}`);
